@@ -1,0 +1,14 @@
+extends layout
+
+block sub_head
+  script(src='//maps.googleapis.com/maps/api/js?key=#{apiKey}')
+
+block content
+  h1= title
+  p Welcome to #{title}
+  label(for='selectLinha')= "Selecione a linha:"
+  div#main(data-role='controlgroup', data-type='horizontal')
+    select#selectLinha
+      option(value='422')= "422"
+    button#carregaLinha= "OK"
+  div#mapa
