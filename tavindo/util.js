@@ -9,3 +9,13 @@ module.exports.distanceBetweenLatLon = function(lat1, lon1, lat2, lon2) {
     var d = R * c;
     return d * 1000;
 };
+
+module.exports.zeros = function(valor, casas) {
+    var tmp = valor + '';
+    
+    while(tmp.length < casas) {
+        tmp = '0' + tmp;
+    }
+    
+    return tmp;
+};
