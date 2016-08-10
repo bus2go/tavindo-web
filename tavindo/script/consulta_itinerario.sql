@@ -11,9 +11,11 @@ SELECT DISTINCT
     shape_pt_lon AS lon, 
     shape_pt_sequence::integer, 
     shape_dist_traveled 
-FROM routes r, trips t, shapes s
+FROM routes r, routes_trips rt, trips t, shapes s
 WHERE r.route_short_name = '434'
-AND r.route_id = t.route_id
+AND r.trip_headsign = 'GRAJAÚ'
+AND r.route_id = rt.route_id
+AND rt.trip_id = t.trip_id
 AND t.shape_id = s.shape_id
 ORDER BY
     trip_headsign ASC,
