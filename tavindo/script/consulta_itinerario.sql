@@ -13,7 +13,7 @@ SELECT DISTINCT
     shape_dist_traveled 
 FROM routes r, routes_trips rt, trips t, shapes s
 WHERE r.route_short_name = '434'
-AND r.trip_headsign = 'GRAJAÚ'
+AND t.trip_headsign = 'GRAJAÚ'
 AND r.route_id = rt.route_id
 AND rt.trip_id = t.trip_id
 AND t.shape_id = s.shape_id
