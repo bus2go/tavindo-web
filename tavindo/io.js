@@ -22,7 +22,8 @@ io.on('connection', function (socket) {
   
   socket.on('loadPontos', function (linha) {
     console.log('>>> loadPontos.linha:', linha);
-    var sqlQuery = "SELECT p.id, p.id_rota, r.id_linha, p.id_gps, l.linha, r.descricao, r.ativo, p.lat, p.lon FROM linha l, rota r, ponto p WHERE l.id = r.id_linha AND r.id = p.id_rota AND l.linha = $1 AND r.ativo = 'S' ORDER BY p.sequencia ASC";
+    //var sqlQuery = "SELECT p.id, p.id_rota, r.id_linha, p.id_gps, l.linha, r.descricao, r.ativo, p.lat, p.lon FROM linha l, rota r, ponto p WHERE l.id = r.id_linha AND r.id = p.id_rota AND l.linha = $1 AND r.ativo = 'S' ORDER BY p.sequencia ASC";
+    var sqlQuery = fs.readFileSync('script/consulta_itinerario.sql').toString();
     //var sqlMaiorRota = fs.readFileSync('script/query_maior_rota.sql').toString();
     //var sqlDetalhe = fs.readFileSync('script/query_detalhe_maior_rota.sql').toString();
     //console.log('sql:', sqlQuery);
