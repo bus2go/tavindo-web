@@ -32,7 +32,8 @@ io.on('connection', function (socket) {
       //var idRota = result.rows[0].id_rota;
       //console.log('idRota:', idRota);
       //db.sql(sqlDetalhe, [idRota], function(resultDetalhe) {
-      db.sql(sqlQuery, [linha], function(resultDetalhe) {
+      // db.sql(sqlQuery, [linha], function(resultDetalhe) {
+      db.sql(sqlQuery, [], function(resultDetalhe) {
         socket.emit('pontos', resultDetalhe);
       });
     //});
