@@ -12,8 +12,7 @@ SELECT DISTINCT
     shape_pt_sequence::integer, 
     shape_dist_traveled 
 FROM routes r, routes_trips rt, trips t, shapes s
-WHERE r.route_short_name = '434'
-AND t.trip_headsign = 'GRAJAÚ'
+WHERE r.route_short_name = $1
 AND r.route_id = rt.route_id
 AND rt.trip_id = t.trip_id
 AND t.shape_id = s.shape_id
