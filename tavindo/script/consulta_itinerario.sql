@@ -5,7 +5,7 @@ SELECT DISTINCT
     route_long_name AS descricao, 
     'S' AS ativo,
     service_id, 
-    trip_headsign, 
+    rt.trip_headsign, 
     s.shape_id, 
     shape_pt_lat AS lat, 
     shape_pt_lon AS lon, 
@@ -17,5 +17,5 @@ AND r.route_id = rt.route_id
 AND rt.trip_id = t.trip_id
 AND t.shape_id = s.shape_id
 ORDER BY
-    trip_headsign ASC,
+    rt.trip_headsign ASC,
     shape_pt_sequence::integer ASC;

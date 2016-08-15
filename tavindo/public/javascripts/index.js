@@ -1,53 +1,78 @@
-var map = null;
-var rotaAtual = null;
+/* global io, ol, $, google */
 
 var mapOSM = null;
-var rotaAtualOSM = null;
-
-var markers = [];
-var infoMarkers = [];
 var socket = null;
 
-$(document).ready(function(){
+function init() {
     socket = io();
+    
+    mapOSM = new ol.Map({
+        target: 'mapaOSM',
+        layers: [
+            new ol.layer.Tile({ source: new ol.source.OSM() }),
+            new ol.layer.Vector({ source: new ol.source.Vector() })
+        ],
+        view: new ol.View({
+            center: ol.proj.fromLonLat([-43.208, -22.9102]),
+            zoom: 11
+        })
+    });
+}
+
+$(document).ready(function(){
+    init();
+    
     socket.on('itinerario', function (data) {
         console.log(data);
-        var trechosIda = [];
-        var trechosVolta = [];
-        var controle = 0;
-        var bounds = new google.maps.LatLngBounds();
         
-        for(var i=0; i<data.length; i++) {
-            var pos = new google.maps.LatLng(data[i].latitude, data[i].longitude);
-            if(controle == 0) {
-                controle = data[i].shape_id;
-            } else if(controle == data[i].shape_id) {
-                trechosIda.push(pos);
+        mapOSM.getVectorLayer().getSource().clear();
+        
+        var trechosIda = { label: '', points: [] };
+        var trechosVolta = { label: '', points: [] };
+        var controle = 0;
+        
+        for(var i=0; i<data.rows.length; i++) {
+            var row = data.rows[i];
+            var pos = ol.proj.transform([parseFloat(row.lon), parseFloat(row.lat)], 'EPSG:4326', 'EPSG:3857');
+            
+            if(controle === 0 || controle === row.shape_id) {
+                controle = row.shape_id;
+                trechosIda.label = row.trip_headsign.trim();
+                trechosIda.points.push(pos);
             } else {
-                trechosVolta.push(pos);
+                trechosVolta.label = row.trip_headsign.trim();
+                trechosVolta.points.push(pos);
             }
-            bounds.extend(pos);
         }
         
-        var rotaIda = new google.maps.Polyline({
-            path: trechosIda,
-            geodesic: true,
-            strokeColor: '#FF0000',
-            strokeOpacity: 1.0,
-            strokeWeight: 3
+        var rotaIda = new ol.Feature({
+            geometry: new ol.geom.LineString(trechosIda.points),
+            name: trechosIda.label
         });
         
-        var rotaVolta = new google.maps.Polyline({
-            path: trechosVolta,
-            geodesic: true,
-            strokeColor: '#00FF00',
-            strokeOpacity: 1.0,
-            strokeWeight: 3
+        var rotaVolta = new ol.Feature({
+            geometry: new ol.geom.LineString(trechosVolta.points),
+            name: trechosVolta.label
         });
-
-        rotaIda.setMap(map);
-        rotaVolta.setMap(map);
-        map.fitBounds(bounds);
+        
+        var lineStyleIda = new ol.style.Style({
+            fill: new ol.style.Fill({ color: '#00FF00', weight: 4 }),
+            stroke: new ol.style.Stroke({ color: '#DD0000', width: 3 })
+        });
+        
+        var lineStyleVolta = new ol.style.Style({
+            fill: new ol.style.Fill({ color: '#FF0000', weight: 4 }),
+            stroke: new ol.style.Stroke({ color: '#00DD00', width: 3 })
+        });
+        
+        rotaIda.setStyle(lineStyleIda);
+        rotaVolta.setStyle(lineStyleVolta);
+        
+        mapOSM.getVectorLayer().getSource().addFeature(rotaIda);
+        mapOSM.getVectorLayer().getSource().addFeature(rotaVolta);
+        
+        var extent = mapOSM.getVectorLayer().getSource().getExtent();
+        mapOSM.getView().fit(extent, mapOSM.getSize());
     });
     
     socket.on('pontos', function(data) {
@@ -113,8 +138,6 @@ $(document).ready(function(){
             bounds.extend(pos);
         }
         
-        var extent = mapOSM.getVectorLayer().getSource().getExtent();
-        mapOSM.getView().fit(extent, mapOSM.getSize());
         
         map.fitBounds(bounds);
         
@@ -168,45 +191,14 @@ $(document).ready(function(){
         $('#carregaLinha').click();
     });
     
-    function initialize() {
-        var mapOptions = {
-            center: { lat: -22.9102, lng: -43.208 },
-            zoom: 11
-        };
-        
-        map = new google.maps.Map(document.getElementById('mapa'), mapOptions);
-        
-        mapOSM = new ol.Map({
-            target: 'mapaOSM',
-            layers: [
-                new ol.layer.Tile({
-                    //source: new ol.source.MapQuest({layer: 'osm'})
-                    source: new ol.source.OSM()
-                }),
-                new ol.layer.Vector({
-                    source: new ol.source.Vector()
-                })
-            ],
-            view: new ol.View({
-                center: ol.proj.fromLonLat([-43.208, -22.9102]),
-                zoom: 11
-            })
-        });
-    }
-    
-    google.maps.event.addDomListener(window, 'load', initialize);
-    
     $('#carregaLinha').click(function() {
         var linha = $('#selectLinha').val();
         
         console.log('linha:', linha);
         
-        socket.emit('loadPontos', linha);
+        //socket.emit('pontos.load', linha);
+        socket.emit('itinerario.load', linha);
     });
-    
-    google.maps.Polyline.prototype.distanceBetweenPointsOnPath = function(origin, destination) {
-    
-    };
 });
 
 ol.Map.prototype.getVectorLayer = function() {
@@ -220,4 +212,4 @@ ol.Map.prototype.getVectorLayer = function() {
     }
     
     return null;
-}
+};
