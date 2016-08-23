@@ -2,6 +2,8 @@
 
 var mapOSM = null;
 var socket = null;
+var socketLinha = null;
+var markers = [];
 
 function init() {
     socket = io();
@@ -24,8 +26,6 @@ $(document).ready(function(){
     
     socket.on('itinerario', function (data) {
         console.log(data);
-        
-        mapOSM.getVectorLayer().getSource().clear();
         
         var trechosIda = { label: '', points: [] };
         var trechosVolta = { label: '', points: [] };
@@ -77,13 +77,6 @@ $(document).ready(function(){
     
     socket.on('pontos', function(data) {
         console.log('pontos:', data);
-        
-        var bounds = new google.maps.LatLngBounds();
-        
-        if(rotaAtual) {
-            rotaAtual.setMap(null);
-            mapOSM.getVectorLayer().getSource().removeFeature(rotaAtualOSM);
-        }
         
         while(infoMarkers.length > 0) {
             //markers[i].setMap(null);
@@ -137,54 +130,34 @@ $(document).ready(function(){
             
             bounds.extend(pos);
         }
-        
-        
-        map.fitBounds(bounds);
-        
-        rotaAtual = new google.maps.Polyline({
-            map: map,
-            path: pontos,
-            //geodesic: true,
-            strokeColor: '#0000FF',
-            strokeOpacity: 1.0,
-            strokeWeight: 2
-        });
-        
-        console.log('pontosOSM:', pontosOSM);
-            
-        /*
-        var featureLine = new ol.Feature({
-            geometry: new ol.geom.LineString(pontosOSM)
-        });
-        
-        var vectorLine = new ol.source.Vector({});
-        vectorLine.addFeature(featureLine);
-        */
-        var lineStyle = new ol.style.Style({
-            fill: new ol.style.Fill({ color: '#00FF00', weight: 4 }),
-            stroke: new ol.style.Stroke({ color: '#DD0000', width: 3 })
-        });
-        /*
-        var vectorLineLayer = new ol.layer.Vector({
-            source: vectorLine,
-            style: lineStyle
-        });
-        */
-        
-        //mapOSM.addLayer(vectorLineLayer);
-        rotaAtualOSM = new ol.Feature({
-            geometry: new ol.geom.LineString(pontosOSM),
-            name: 'Line'
-        });
-        
-        rotaAtualOSM.setStyle(lineStyle);
-        console.log('rotaAtualOSM:', rotaAtualOSM);
-        
-        mapOSM.getVectorLayer().getSource().addFeature(rotaAtualOSM);
     });
     
     socket.on('update', function(data) {
         console.log('update.data:', data);
+        
+        var marker = markers[data.ordem];
+        if(marker) {
+            marker.setGeometry(new ol.geom.Point(ol.proj.fromLonLat([data.lon, data.lat])));
+        } else {
+            var iconFeature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([data.lon, data.lat])),
+                name: data.ordem + ' - ' + data.dataHora
+            });
+            
+            var iconStyle = new ol.style.Style({
+                image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+                    anchor: [0.5, 0.9],
+                    opacity: 0.75,
+                    scale: 0.3,
+                    src: '/images/pin.png'
+                }))
+            });
+            
+            iconFeature.setStyle(iconStyle);
+            markers[data.ordem] = iconFeature;
+            
+            mapOSM.getVectorLayer().getSource().addFeature(iconFeature);
+        }
     });
     
     socket.on('atualizar', function() {
@@ -195,9 +168,12 @@ $(document).ready(function(){
         var linha = $('#selectLinha').val();
         
         console.log('linha:', linha);
+        mapOSM.getVectorLayer().getSource().clear();
+        destroyMarkers(markers);
         
-        //socket.emit('pontos.load', linha);
+        socket.emit('linha.select', linha);
         socket.emit('itinerario.load', linha);
+        //socket.emit('pontos.load', linha);
     });
 });
 
@@ -212,4 +188,12 @@ ol.Map.prototype.getVectorLayer = function() {
     }
     
     return null;
+};
+
+var destroyMarkers = () => {
+    for(var ordem in markers) {
+        if(markers.hasOwnProperty(ordem)) {
+            delete markers[ordem];
+        }
+    }
 };

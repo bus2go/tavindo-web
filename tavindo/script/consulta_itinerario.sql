@@ -1,21 +1,18 @@
-SELECT DISTINCT 
+SELECT
     NULL AS id_gps,
-    r.route_id, 
-    route_short_name AS linha, 
-    route_long_name AS descricao, 
+    NULL AS route_id, 
+    d.route_short_name AS linha, 
+    d.route_short_name AS descricao,  
     'S' AS ativo,
-    service_id, 
-    rt.trip_headsign, 
-    s.shape_id, 
-    shape_pt_lat AS lat, 
-    shape_pt_lon AS lon, 
-    shape_pt_sequence::integer, 
-    shape_dist_traveled 
-FROM routes r, routes_trips rt, trips t, shapes s
-WHERE r.route_short_name = $1
-AND r.route_id = rt.route_id
-AND rt.trip_id = t.trip_id
-AND t.shape_id = s.shape_id
+    NULL AS service_id, 
+    d.trip_headsign, 
+    d.shape_id, 
+    d.lat, 
+    d.lon, 
+    shape_pt_sequence,
+    distancia_total
+FROM distance d
+WHERE d.route_short_name = $1
 ORDER BY
-    rt.trip_headsign ASC,
-    shape_pt_sequence::integer ASC;
+    d.trip_headsign ASC,
+    d.shape_pt_sequence ASC;
