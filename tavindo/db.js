@@ -1,7 +1,7 @@
 var pg = require('pg');
 var config = require('./config');
 
-const Pool = db.Pool;
+const Pool = pg.Pool;
 const pool = new Pool({
     user: config.user,
     password: config.password,
@@ -15,40 +15,7 @@ const pool = new Pool({
     throw err;
 });
 
-var db = pg;
-
-/*
-db.connect(CONN_STRING, function(err, connection, done) {
-    if(err) throw err;
-    
-    done();
-});
-
-module.exports.sql = function(sqlQuery, params, func) {
-    db.connect(CONN_STRING, function(err, connection, done) {
-        if(err) {
-            console.log('err:', err);
-            throw err;
-        }
-        
-        connection.query(sqlQuery, params, function(err, rows) {
-            if(err) {
-                err.sql = sqlQuery;
-                console.log('err:', err);
-                throw err;
-            }
-            
-            if(func) {
-                func(rows);
-            }
-        });
-    
-        done();
-    });
-};
-*/
-
-module.exports = db;
+module.exports = pg;
 module.exports.run = (sql, cbDone) => {
     pool.query(sql, (err, rows) => {
         if (err) {

@@ -64,7 +64,7 @@ io.on('connection', socket => {
     var sqlQuery = fs.readFileSync('script/consulta_itinerario.sql').toString();
     
     try {
-      db.sql(sqlQuery, [linha], result => {
+      db.run(sqlQuery, [linha], result => {
         socket.emit('itinerario', result);
       });
     } catch(err) {
