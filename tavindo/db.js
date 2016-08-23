@@ -1,8 +1,7 @@
 var pg = require('pg');
 var config = require('./config');
 
-const Pool = pg.Pool;
-const pool = new Pool({
+const pool = new pg.Pool({
     user: config.user,
     password: config.password,
     host: config.host,
@@ -16,13 +15,15 @@ const pool = new Pool({
 });
 
 module.exports = pg;
-module.exports.run = (sql, cbDone) => {
-    pool.query(sql, (err, rows) => {
+module.exports.run = (sql, params, cbDone) => {
+    console.log(sql, '\n\n', params);
+    
+    pool.query(sql, params, (err, rows) => {
         if (err) {
             console.log('err:', sql, err);
             throw err;
         }
         
-        if(cbDone) cbDone();
+        if(cbDone) cbDone(rows);
     });
 };
