@@ -16,8 +16,6 @@ const pool = new pg.Pool({
 
 module.exports = pg;
 module.exports.run = (sql, params, cbDone) => {
-    console.log(sql, '\n\n', params);
-    
     pool.query(sql, params, (err, rows) => {
         if (err) {
             console.log('err:', sql, err);
