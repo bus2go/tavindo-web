@@ -1,0 +1,1 @@
+import App from './public/javascripts/application/webapp.js';

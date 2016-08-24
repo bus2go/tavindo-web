@@ -1,0 +1,32 @@
+#loginForm {
+	text-align: center;
+	padding: 3.5rem 0;
+	margin: auto;
+
+	header {
+		h1,h2,h3,h4,h5,h6 {
+			display: inline-block;
+			vertical-align: middle;
+			margin: 0;
+		}
+	}
+
+	.button {
+		vertical-align: middle;
+		margin-left: 0;
+	}
+	
+	input, button, .button {
+		width: 75%;
+	}
+	
+	.facebook {
+		background-color: #3b5998;
+		color: white;
+	}
+	
+	.google {
+		background-color: #d34836;
+		color: white;
+	}
+}

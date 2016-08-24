@@ -1,22 +1,7 @@
 extends layout
 
 block sub_head
-  link(rel='stylesheet', href='/stylesheets/ol.css')
-  script(src='//maps.googleapis.com/maps/api/js?key=#{apiKey}')
-  script(src='/javascripts/InfoMarker.js')
-  script(src='/javascripts/ol.js')
-  script(src='/socket.io/socket.io.js')
-  script(src='/javascripts/index.js')
+  script(src='/javascripts/bundle.js')
 
 block content
-  h1= title
-  p Welcome to #{title}
-  label(for='selectLinha')= "Selecione a linha:"
-  div#main(data-role='controlgroup', data-type='horizontal')
-    select#selectLinha
-      option(value='422')= "422"
-      option(value='368')= "368"
-      option(value='434')= "434"
-      option(value='435')= "435"
-    button#carregaLinha= "OK"
-  div#mapaOSM
+  div#app
