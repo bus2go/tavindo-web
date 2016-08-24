@@ -2,4 +2,5 @@ npm-debug.log*
 .c9
 tavindo/node_modules
 config.js
+bundle.js
 bundle.js.map
