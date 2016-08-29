@@ -2,12 +2,18 @@ import { createAction } from 'redux-act';
 
 const loginSuccess = createAction('loginSuccess');
 const logoutSuccess = createAction('logoutSuccess');
+
 const modalClose = createAction('modalClose');
-const usersLoadSuccess = createAction('usersLoadSuccess');
+
+const busLineSelected = createAction('busLineSelected');
+const busLineCarsLoaded = createAction('busLineCarsLoaded');
+const busLineItineraryLoaded = createAction('busLineItineraryLoaded');
 
 export {
     loginSuccess,
     logoutSuccess,
     modalClose,
-    usersLoadSuccess
+    busLineSelected,
+    busLineCarsLoaded,
+    busLineItineraryLoaded
 };

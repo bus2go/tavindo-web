@@ -1,29 +1,31 @@
-var io = require('socket.io')();
-var db = require('./db');
-var fs = require('fs');
+"use strict";
 
-var roomPrefix = '/linha_';
-var currentData = {};
+const io = require('socket.io')();
+const db = require('./db');
+const fs = require('fs');
+
+const roomPrefix = '/linha_';
+let currentData = {};
 
 io.on('connection', socket => {
   
   socket.on('linha.select', linha => {
-    for(var room in socket.rooms) {
+    for(let room in socket.rooms) {
       if(room.startsWith(roomPrefix)) {
         socket.leave(room);
       }
     }
     
     linha += '';
-    var roomName = roomPrefix + linha;
+    let roomName = roomPrefix + linha;
     
     socket.join(roomName, err => {
       if(err) console.log('err', err);
       
       if(currentData[linha]) {
-        for(var ordem in currentData[linha].ordens) {
+        for(let ordem in currentData[linha].ordens) {
           if(currentData[linha].ordens.hasOwnProperty(ordem)) {
-            var last = currentData[linha].ordens[ordem].gps.length - 1;
+            let last = currentData[linha].ordens[ordem].gps.length - 1;
             socket.emit('update', currentData[linha].ordens[ordem].gps[last]);
           }
         }
@@ -46,7 +48,7 @@ io.on('connection', socket => {
       };
     }
     
-    var gpsList = currentData[dados.linha].ordens[dados.ordem].gps;
+    let gpsList = currentData[dados.linha].ordens[dados.ordem].gps;
     
     if(gpsList.length > 4) {
       currentData[dados.linha].ordens[dados.ordem].gps.shift();
@@ -61,11 +63,32 @@ io.on('connection', socket => {
   });
   
   socket.on('itinerario.load', linha => {
-    var sqlQuery = fs.readFileSync('script/consulta_itinerario.sql').toString();
+    let sql = fs.readFileSync('script/consulta_itinerario.sql').toString();
     
     try {
-      db.run(sqlQuery, [linha], result => {
+      db.run(sql, [linha], result => {
         socket.emit('itinerario', result);
+      });
+    } catch(err) {
+      console.log('err:', err);
+    }
+  });
+  
+  socket.on('linhas.load', () => {
+    let sql = fs.readFileSync('script/consulta_linhas.sql').toString();
+    
+    try {
+      db.run(sql, null, data => {
+        console.log('rows', data.rows);
+        
+        let result = data.rows.map(item => {
+          return { 
+            value: item.linha,
+            text: item.linha + ' - ' + item.nome
+          };
+        });
+        
+        socket.emit('linhas', result);
       });
     } catch(err) {
       console.log('err:', err);

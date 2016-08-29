@@ -3,7 +3,7 @@ import { createReducer } from 'redux-act';
 
 import { INFO, WARNING, ERROR } from '../components/modal.view';
 
-import { loginSuccess, logoutSuccess, modalClose, usersLoadSuccess } from './actions';
+import { loginSuccess, logoutSuccess, modalClose, busLineSelected, busLineCarsLoaded, busLineItineraryLoaded } from './actions';
 
 const userReducer = createReducer({
     [loginSuccess]: (state, payload) => { return { ...state, user: payload.user }; },
@@ -26,16 +26,24 @@ const messagesReducer = createReducer({
     messages: []
 });
 
-const usersReducer = createReducer({
-    [usersLoadSuccess]: (state, payload) => { return { ...state, users: payload.users }; }
+const busLineReducer = createReducer({
+    [busLineSelected]: (state, payload) => { return { ...state, 
+        busLine: { ...state.busLine, selected: payload.linha }
+    }; },
+    [busLineCarsLoaded]: (state, payload) => { return { ...state,
+        busLine: { ...state.busLine, cars: payload.cars }
+    }; },
+    [busLineItineraryLoaded]: (state, payload) => { return { ...state,
+        busLine: { ...state.busLine, itinerary: payload.itinerary }
+    }; },
 }, {
-    users: []
+    busLine: null
 });
 
 const store = createStore(combineReducers({
     userState: userReducer,
     messagesState: messagesReducer,
-    usersState: usersReducer
+    busLineState: busLineReducer
 }));
 
 export default store;

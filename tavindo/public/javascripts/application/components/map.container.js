@@ -5,27 +5,29 @@ import MapView from './map.view';
 
 import socket from '../utils/socket';
 
+import Marker from '../classes/marker';
+
 class MapContainer extends Component {
     constructor(props) {
         super(props);
         
         this.submitLinha = this.submitLinha.bind(this);
+        this.LIMIT = 5;
     }
     
     submitLinha(event) {
         let select = document.getElementById('selectLinha');
-        let linha = select.options[select.selectedIndex].value;
+        this.linha = select.options[select.selectedIndex].value;
         
-        console.log('linha:', linha);
+        console.log('linha:', this.linha);
         this.getVectorLayer().getSource().clear();
         this.destroyMarkers();
         
-        socket.emit('linha.select', linha);
-        socket.emit('itinerario.load', linha);
+        socket.emit('itinerario.load', this.linha);
     }
     
     destroyMarkers() {
-        for(var ordem in this.markers) {
+        for(let ordem in this.markers) {
             if(this.markers.hasOwnProperty(ordem)) {
                 delete this.markers[ordem];
             }
@@ -33,17 +35,43 @@ class MapContainer extends Component {
     }
     
     getVectorLayer() {
-        var layers = this.map.getLayers();
+        let layers = this.map.getLayers();
         
-        for(var i=0; i<layers.getLength(); i++) {
-            var layer = layers.item(i);
+        for(let i=0; i<layers.getLength(); i++) {
+            let layer = layers.item(i);
             if(layer instanceof ol.layer.Vector) {
                 return layer;
             }
         }
         
         return null;
-    };
+    }
+    
+    getClosest(lat, lon) {
+        let result = { ida: null, volta: null };
+        let minDistanceIda = Infinity;
+        let minDistanceVolta = Infinity;
+        
+        for(let i=0; i<this.trechosIda.rows.length; i++) {
+            let point = this.trechosIda.rows[i];
+            let distance = Math.sqrt(Math.pow(point.lat - lat, 2) + Math.pow(point.lon - lon, 2)) * 10000000/90.0;
+            if(distance < minDistanceIda) {
+                result.ida = point;
+                minDistanceIda = distance;
+            }
+        }
+        
+        for(let i=0; i<this.trechosVolta.rows.length; i++) {
+            let point = this.trechosVolta.rows[i];
+            let distance = Math.sqrt(Math.pow(point.lat - lat, 2) + Math.pow(point.lon - lon, 2)) * 10000000/90.0;
+            if(distance < minDistanceVolta) {
+                result.volta = point;
+                minDistanceVolta = distance;
+            }
+        }
+        
+        return result;
+    }
     
     componentDidMount() {
         this.markers = {};
@@ -59,45 +87,47 @@ class MapContainer extends Component {
             })
         });
         
-        var that = this;
+        let that = this;
         
         socket.on('itinerario', function (data) {
-            console.log(data);
+            console.log('itinerario', data);
             
-            var trechosIda = { label: '', points: [] };
-            var trechosVolta = { label: '', points: [] };
-            var controle = 0;
+            that.trechosIda = { label: '', points: [], rows: [] };
+            that.trechosVolta = { label: '', points: [], rows: [] };
+            let controle = 0;
             
-            for(var i=0; i<data.rows.length; i++) {
-                var row = data.rows[i];
-                var pos = ol.proj.transform([parseFloat(row.lon), parseFloat(row.lat)], 'EPSG:4326', 'EPSG:3857');
+            for(let i=0; i<data.rows.length; i++) {
+                let row = data.rows[i];
+                let pos = ol.proj.transform([parseFloat(row.lon), parseFloat(row.lat)], 'EPSG:4326', 'EPSG:3857');
                 
                 if(controle === 0 || controle === row.shape_id) {
                     controle = row.shape_id;
-                    trechosIda.label = row.trip_headsign.trim();
-                    trechosIda.points.push(pos);
+                    that.trechosIda.label = row.trip_headsign.trim();
+                    that.trechosIda.points.push(pos);
+                    that.trechosIda.rows.push(row);
                 } else {
-                    trechosVolta.label = row.trip_headsign.trim();
-                    trechosVolta.points.push(pos);
+                    that.trechosVolta.label = row.trip_headsign.trim();
+                    that.trechosVolta.points.push(pos);
+                    that.trechosVolta.rows.push(row);
                 }
             }
             
-            var rotaIda = new ol.Feature({
-                geometry: new ol.geom.LineString(trechosIda.points),
-                name: trechosIda.label
+            let rotaIda = new ol.Feature({
+                geometry: new ol.geom.LineString(that.trechosIda.points),
+                name: that.trechosIda.label
             });
             
-            var rotaVolta = new ol.Feature({
-                geometry: new ol.geom.LineString(trechosVolta.points),
-                name: trechosVolta.label
+            let rotaVolta = new ol.Feature({
+                geometry: new ol.geom.LineString(that.trechosVolta.points),
+                name: that.trechosVolta.label
             });
             
-            var lineStyleIda = new ol.style.Style({
+            let lineStyleIda = new ol.style.Style({
                 fill: new ol.style.Fill({ color: '#00FF00', weight: 4 }),
                 stroke: new ol.style.Stroke({ color: '#DD0000', width: 3 })
             });
             
-            var lineStyleVolta = new ol.style.Style({
+            let lineStyleVolta = new ol.style.Style({
                 fill: new ol.style.Fill({ color: '#FF0000', weight: 4 }),
                 stroke: new ol.style.Stroke({ color: '#00DD00', width: 3 })
             });
@@ -108,37 +138,50 @@ class MapContainer extends Component {
             that.getVectorLayer().getSource().addFeature(rotaIda);
             that.getVectorLayer().getSource().addFeature(rotaVolta);
             
-            var extent = that.getVectorLayer().getSource().getExtent();
+            let extent = that.getVectorLayer().getSource().getExtent();
             that.map.getView().fit(extent, that.map.getSize());
+            
+            socket.emit('linha.select', that.linha);
         });
         
         socket.on('update', function(data) {
             console.log('update.data:', data);
             
-            var marker = that.markers[data.ordem];
+            let marker = that.markers[data.ordem];
+            let closest = that.getClosest(data.lat, data.lon);
+            
             if(marker) {
-                marker.setGeometry(new ol.geom.Point(ol.proj.fromLonLat([data.lon, data.lat])));
+                marker.feature.setGeometry(new ol.geom.Point(ol.proj.fromLonLat([data.lon, data.lat])));
+                marker.pontos.push(data);
+                marker.pontosIda.push(closest.ida);
+                marker.pontosVolta.push(closest.volta);
+                
+                if(marker.pontos.length > that.LIMIT) {
+                    marker.pontos.shift();
+                    marker.pontosIda.shift();
+                    marker.pontosVolta.shift();
+                }
             } else {
-                var iconFeature = new ol.Feature({
-                    geometry: new ol.geom.Point(ol.proj.fromLonLat([data.lon, data.lat])),
-                    name: data.ordem + ' - ' + data.dataHora
-                });
-                
-                var iconStyle = new ol.style.Style({
-                    image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-                        anchor: [0.5, 0.9],
-                        opacity: 0.75,
-                        scale: 0.3,
-                        src: '/images/pin.png'
-                    }))
-                });
-                
-                iconFeature.setStyle(iconStyle);
-                that.markers[data.ordem] = iconFeature;
-                
-                that.getVectorLayer().getSource().addFeature(iconFeature);
+                let marker = new Marker(data, closest);
+                that.markers[data.ordem] = marker;
+                that.getVectorLayer().getSource().addFeature(marker.feature);
             }
         });
+        
+        socket.on('linhas', linhas => {
+            console.log('linhas', linhas);
+            
+            let select = document.getElementById('selectLinha');
+            for(let i=0; i<linhas.length; i++) {
+                let linha = linhas[i];
+                let option = document.createElement("option");
+                option.value = linha.value;
+                option.text = linha.text;
+                select.add(option);
+            }
+        });
+        
+        socket.emit('linhas.load');
     }
     
     render() {

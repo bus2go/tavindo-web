@@ -4,3 +4,4 @@ tavindo/node_modules
 config.js
 bundle.js
 bundle.js.map
+query.sql
