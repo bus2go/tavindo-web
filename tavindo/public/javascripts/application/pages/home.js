@@ -1,15 +1,18 @@
 import React, { Component } from 'react';
 
-import MapContainer from '../components/map.container.js';
+import FormLinhaContainer from '../components/form.linha.container';
 
 class Home extends Component {
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
     }
     
     render() {
-        return(
-            <MapContainer />
+        return (
+            <div>
+                <FormLinhaContainer />
+                {this.props.children}
+            </div>
         );
     }
 }

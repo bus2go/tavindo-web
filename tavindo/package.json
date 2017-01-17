@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node ./bin/wwwio",
+    "start": "node --harmony-async-await ./bin/wwwio",
     "webpack:dev": "webpack --watch --display-modules",
     "webpack:prod": "webpack -p -d"
   },
@@ -32,6 +32,7 @@
     "socket.io": "latest"
   },
   "devDependencies": {
+    "@turf/turf": "^3.7.4",
     "babel-core": "^6.13.2",
     "babel-loader": "^6.2.5",
     "babel-plugin-syntax-async-functions": "^6.13.0",

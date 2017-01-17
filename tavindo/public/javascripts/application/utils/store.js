@@ -3,11 +3,13 @@ import { createReducer } from 'redux-act';
 
 import { INFO, WARNING, ERROR } from '../components/modal.view';
 
-import { loginSuccess, logoutSuccess, modalClose, busLineSelected, busLineCarsLoaded, busLineItineraryLoaded } from './actions';
+import { loginSuccess, logoutSuccess, modalClose, busLinesLoaded, busLineSelected, busUpdated } from './actions';
+
+const LIMIT = 5;
 
 const userReducer = createReducer({
     [loginSuccess]: (state, payload) => { return { ...state, user: payload.user }; },
-    [logoutSuccess]: (state, payload) => { return { ...state, user: payload.user }; }
+    [logoutSuccess]: (state, payload) => { return { ...state, user: null }; }
 }, {
     user: null
 });
@@ -27,17 +29,29 @@ const messagesReducer = createReducer({
 });
 
 const busLineReducer = createReducer({
-    [busLineSelected]: (state, payload) => { return { ...state, 
-        busLine: { ...state.busLine, selected: payload.linha }
+    [busLinesLoaded]: (state, payload) => {
+        return { ...state, busLines: payload };
+    },
+    [busLineSelected]: (state, payload) => { return { ...state,
+        busLine: { ...state.busLine, 
+            selected: payload.routeId,
+            itinerary: payload.itinerary,
+            cars: {}
+        }
     }; },
-    [busLineCarsLoaded]: (state, payload) => { return { ...state,
-        busLine: { ...state.busLine, cars: payload.cars }
-    }; },
-    [busLineItineraryLoaded]: (state, payload) => { return { ...state,
-        busLine: { ...state.busLine, itinerary: payload.itinerary }
-    }; },
+    [busUpdated]: (state, payload) => {
+        let cars = Object.assign({}, state.busLine.cars);
+        
+        if(cars[payload.ordem] && cars[payload.ordem].dataHora == payload.dataHora) return state;
+        
+        cars[payload.ordem] = payload;
+        return { ...state,
+            busLine: { ...state.busLine, cars: cars }
+        };
+    },
 }, {
-    busLine: null
+    busLine: null,
+    busLines: null
 });
 
 const store = createStore(combineReducers({

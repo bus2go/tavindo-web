@@ -22,7 +22,7 @@ class MenuView extends Component {
         return (
             <div className="row">
                 <div className="five columns">
-                    <h1 className="title">{this.props.siteName}</h1>
+                    <h1 className="title"><Link to="/">{this.props.siteName}</Link></h1>
                 </div>
                 <div className="seven columns">
                     <div className="navbar-spacer" />
@@ -32,7 +32,10 @@ class MenuView extends Component {
                     <nav className="navbar">
                         <ul className="navbar-list">
                             <li className="navbar-item">
-                                <Link className="navbar-link" to="/">Home</Link>
+                                <Link className="navbar-link" to="/">Mapa</Link>
+                            </li>
+                            <li className="navbar-item">
+                                <Link className="navbar-link" to="/estacoes">Estações</Link>
                             </li>
                             <li className="navbar-item">
                                 {this.loginLogoutLink()}

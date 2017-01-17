@@ -1,3 +1,5 @@
+// TODO - use github.com/vitaly-t/pg-promise to allow async/await on db queries
+
 var pg = require('pg');
 var config = require('./config');
 
@@ -23,5 +25,17 @@ module.exports.run = (sql, params, cbDone) => {
         }
         
         if(cbDone) cbDone(rows);
+    });
+};
+
+module.exports.runWait = function(sql, params) {
+    return new Promise((resolve, reject) => {
+        pool.query(sql, params, function(err, rows) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows);
+            }
+        });
     });
 };
